@@ -22,7 +22,7 @@
 ## 3. Augmentat data
 
 * subtract a static offset from the angle when choosing the left / right image
-```
+```python
 img_choice = np.random.randint(3)
 if img_choice == 0:
     img_path = os.path.join(PATH, df.left.iloc[idx].strip())
@@ -35,14 +35,14 @@ else:
 ```
 
 * flipping the image
-```
+```python
 if np.random.randint(2) == 0:
     img = np.fliplr(img)
     new_angle = -new_angle
 ```
 
 * Changing brightness
-```
+```python
 def augment_brightness_camera_images(image):
   temp = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
   # Compute a random brightness value and apply to the image
@@ -54,7 +54,7 @@ def augment_brightness_camera_images(image):
 ```
 
 * Horizontal and vertical shifts
-```
+```python
 # Compute X translation
 x_translation = (TRANS_X_RANGE * np.random.uniform()) - (TRANS_X_RANGE / 2)
 new_angle = angle + ((x_translation / TRANS_X_RANGE) * 2) * TRANS_ANGLE
@@ -67,7 +67,7 @@ return cv2.warpAffine(img, translation_matrix, (img.shape[1], img.shape[0]))
 ```
 
 * Biasing towards non-0 value
-```
+```python
 # Choose left / right / center image and compute new angle
 # Do translation and modify the angle again
 # Define a random threshold for each image taken
@@ -83,12 +83,12 @@ if (abs(angle) + bias) < threshold:
 ## 4. Preprocess data
 
 * remove the top 60 pixels (past the horizon) and the bottom 20 pixels (the hood of the car)
-```
+```python
 roi = img[60:140, :, :]
 ```
 
 * Resize the image
-```
+```python
 resize = cv2.resize(roi, (IMG_ROWS, IMG_COLS), interpolation=cv2.INTER_AREA)
 return np.resize(resize, (1, IMG_ROWS, IMG_COLS, IMG_CH))
 ```
@@ -98,13 +98,13 @@ return np.resize(resize, (1, IMG_ROWS, IMG_COLS, IMG_CH))
 * Nvidia pipeline or 
 * VGG16 pre-trained model
 *  lambda layers on the top to normalize the data on the fly
-```
+```python
 model.add(Lambda(lambda x: x/127.5 - .5,
                  input_shape=(IMG_ROWS, IMG_COLS, IMG_CH),
                  output_shape=(IMG_ROWS, IMG_COLS, IMG_CH)))
 ```
 * color space conversion layer 
-```
+```python
 model.add(Convolution2D(3, 1, 1, border_mode='same', name='color_conv'))
 ```
 * Dropouts in all the fully connected layers.
@@ -114,7 +114,7 @@ model.add(Convolution2D(3, 1, 1, border_mode='same', name='color_conv'))
 * Use generators!
 * Optimizer: Adam with a learning rate of 1e-5
 *  slowly reduce angle bias
-```
+```python
 bias = 1. / (num_runs + 1.)
 ```
 
