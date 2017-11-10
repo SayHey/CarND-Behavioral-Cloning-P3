@@ -95,7 +95,7 @@
 
 ## 5. Design architecture
 
-* **Nvidia pipeline or **
+* **Nvidia pipeline or**
 * **VGG16 pre-trained model**
 * **lambda layers on the top to normalize the data on the fly**
     ```python
@@ -113,7 +113,7 @@
 
 * **Use generators!**
 * **Optimizer: Adam with a learning rate of 1e-5**
-* **slowly reduce angle bias**
+* **Slowly reduce angle bias**
     ```python
     bias = 1. / (num_runs + 1.)
     ```
