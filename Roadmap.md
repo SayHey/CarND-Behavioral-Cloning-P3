@@ -9,19 +9,19 @@
 
 ## 1. Collect data
 
-* Use an analog input (joystick, wheel)
-* Need about 40k samples
+* **Use an analog input (joystick, wheel)**
+* **Need about 40k samples**
 
 ## 2. Analize and visualize data
 
-* Plot Angles over time
-* Plot Angle distribution
-* Plot Sample images
-* Visualize data after the augmentation (angle distribution and samples)
+* **Plot Angles over time**
+* **Plot Angle distribution**
+* **Plot Sample images**
+* **Visualize data after the augmentation (angle distribution and samples)**
 
 ## 3. Augmentat data
 
-* subtract a static offset from the angle when choosing the left / right image
+* **subtract a static offset from the angle when choosing the left / right image**
     ```python
     img_choice = np.random.randint(3)
     if img_choice == 0:
@@ -34,14 +34,14 @@
         angle -= OFF_CENTER_IMG
     ```
 
-* flipping the image
+* **flipping the image**
     ```python
     if np.random.randint(2) == 0:
         img = np.fliplr(img)
         new_angle = -new_angle
     ```
 
-* Changing brightness
+* **Changing brightness**
     ```python
     def augment_brightness_camera_images(image):
         temp = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -53,7 +53,7 @@
         return cv2.cvtColor(temp, cv2.COLOR_HSV2RGB)
     ```
 
-* Horizontal and vertical shifts
+* **Horizontal and vertical shifts**
     ```python
     # Compute X translation
     x_translation = (TRANS_X_RANGE * np.random.uniform()) - (TRANS_X_RANGE / 2)
@@ -66,7 +66,7 @@
     return cv2.warpAffine(img, translation_matrix, (img.shape[1], img.shape[0]))
     ```
 
-* Biasing towards non-0 value
+* **Biasing towards non-0 value**
     ```python
     # Choose left / right / center image and compute new angle
     # Do translation and modify the angle again
@@ -78,16 +78,16 @@
     return None, None
     ```
 
-* Shadow augmentation
+* **Shadow augmentation**
 
 ## 4. Preprocess data
 
-* remove the top 60 pixels (past the horizon) and the bottom 20 pixels (the hood of the car)
+* **remove the top 60 pixels (past the horizon) and the bottom 20 pixels (the hood of the car)**
     ```python
     roi = img[60:140, :, :]
     ```
 
-* Resize the image
+* **Resize the image**
     ```python
     resize = cv2.resize(roi, (IMG_ROWS, IMG_COLS), interpolation=cv2.INTER_AREA)
     return np.resize(resize, (1, IMG_ROWS, IMG_COLS, IMG_CH))
@@ -95,32 +95,32 @@
 
 ## 5. Design architecture
 
-* Nvidia pipeline or 
-* VGG16 pre-trained model
-*  lambda layers on the top to normalize the data on the fly
+* **Nvidia pipeline or **
+* **VGG16 pre-trained model**
+* **lambda layers on the top to normalize the data on the fly**
     ```python
     model.add(Lambda(lambda x: x/127.5 - .5,
                  input_shape=(IMG_ROWS, IMG_COLS, IMG_CH),
                  output_shape=(IMG_ROWS, IMG_COLS, IMG_CH)))
     ```
-* color space conversion layer 
+* **color space conversion layer** 
     ```python
     model.add(Convolution2D(3, 1, 1, border_mode='same', name='color_conv'))
     ```
-* Dropouts in all the fully connected layers.
+* **Dropouts in all the fully connected layers.**
 
 ## 6. Train model
 
-* Use generators!
-* Optimizer: Adam with a learning rate of 1e-5
-*  slowly reduce angle bias
+* **Use generators!**
+* **Optimizer: Adam with a learning rate of 1e-5**
+* **slowly reduce angle bias**
     ```python
     bias = 1. / (num_runs + 1.)
     ```
 
 ## 7. Enhance model
 
-* Possibly multiply the predicted angle by a constan to allow sharp turns
+* **Possibly multiply the predicted angle by a constan to allow sharp turns**
 
 
 
