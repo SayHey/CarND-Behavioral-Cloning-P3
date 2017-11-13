@@ -24,12 +24,9 @@ image_shape =  X_train.shape[1:4]
 
 # Define model
 
-from keras.models import Sequential
-from keras.layers import Flatten, Dense
+from architecture import model_architecture
 
-model = Sequential()
-model.add(Flatten(input_shape = image_shape))
-model.add(Dense(1))
+model = model_architecture(image_shape)
 
 # Train model
 
