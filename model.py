@@ -1,36 +1,48 @@
 
 # Load data
 
-import csv
-import cv2
-import numpy as np
+from csv import DictReader
 
-images = []
-measurements = []
-
+samples = []
 with open('data/driving_log.csv') as csvfile:
-    reader = csv.DictReader(csvfile)
+    reader = DictReader(csvfile)
     for line in reader:
-        image_path = 'data/' + line['center']
-        image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        images.append(image)
-        measurement = float(line['steering'])
-        measurements.append(measurement)
+        samples.append(line)
 
-X_train = np.array(images)
-y_train = np.array(measurements)
-image_shape =  X_train.shape[1:4]
+from sklearn.model_selection import train_test_split
+train_samples, validation_samples = train_test_split(samples, test_size=0.1)
 
 # Define model
 
 from architecture import model_architecture
+from data import SIZE_X, SIZE_Y
 
+image_shape = (SIZE_X, SIZE_Y)
 model = model_architecture(image_shape)
+model.compile(loss = 'mse', optimizer = 'adam')
 
 # Train model
 
-model.compile(loss = 'mse', optimizer = 'adam')
-model.fit(X_train, y_train, validation_split = 0.2, shuffle = True, nb_epoch = 4)
+from data import data_generator
+
+batch_size = 32
+nb_epoch = 5
+samples_per_epoch = len(train_samples)
+nb_val_samples = len(validation_samples)
+
+for epoch in range(nb_epoch):
+
+    # Define data generators
+    non_zero_bias = 1. / (epoch + 1.)
+    train_generator = data_generator(train_samples, non_zero_bias = non_zero_bias, batch_size = batch_size)
+    validation_generator = data_generator(validation_samples)
+
+    # Fit one epoch
+    model.fit_generator(train_generator, 
+                        samples_per_epoch = samples_per_epoch, 
+                        validation_data = validation_generator, 
+                        nb_val_samples = nb_val_samples, 
+                        nb_epoch = 1)
+    
 
 model.save('model.h5')

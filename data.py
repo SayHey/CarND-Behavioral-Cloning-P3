@@ -1,4 +1,7 @@
 
+import cv2
+import numpy as np
+
 ### Data Augmentation
 
 # parameters
@@ -90,7 +93,7 @@ def preprocess_pipeline(data_line):
 
 ### Data Generator
 
-def generate_batch(data, bias = 1.0, batch_size = 32):
+def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
     
     data_length = len(data)
     batch_images = np.zeros((batch_sizeE, SIZE_X, SIZE_Y, 3))
@@ -102,7 +105,7 @@ def generate_batch(data, bias = 1.0, batch_size = 32):
             data_line = data[line]
             
             image, angle = preprocess_pipeline(data_line)
-            while filter_zero_angle_data(angle, bias):
+            while filter_zero_angle_data(angle, non_zero_bias):
                image, angle = preprocess_pipeline(data_line)
 
             batch_images[batch] = image
