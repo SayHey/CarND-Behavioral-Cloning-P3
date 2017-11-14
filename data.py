@@ -5,8 +5,8 @@ import numpy as np
 ### Data Augmentation
 
 # parameters
-SIZE_X = 64                     # image new x dimension parameter
-SIZE_Y = 64                     # image new y dimension parameter
+SIZE_X = 320                     # image x dimension parameter
+SIZE_Y = 160                    # image y dimension parameter
 IMG_CH = 3                      # image number of chanels
 BRIGHTNESS_RANGE = .5           # brightness range parameter used in brightness_augmentation
 TRANS_X_RANGE = 100             # transition range parameter used in shift_augmentation
@@ -95,14 +95,15 @@ def preprocess_pipeline(data_line):
 
 
 ### Data Generator
-
+import os
+from matplotlib import pyplot
 def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
     
     data_length = len(data)
-    batch_images = np.zeros((batch_size, SIZE_X, SIZE_Y, IMG_CH))
-    batch_steering = np.zeros(batch_size)
 
     while 1:
+        images = []
+        angles = []
         for batch in range(batch_size):
             line = np.random.randint(data_length)
             data_line = data[line]
@@ -111,12 +112,10 @@ def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
             while filter_zero_angle_data(angle, non_zero_bias):
                image, angle = preprocess_pipeline(data_line)
 
-            image = np.array(image[0]) # for some reason python thinks that image = image,angle
+            images.append(image)
+            angles.append(angle)
 
-            batch_images[batch] = image
-            batch_steering[batch] = angle
-
-        yield batch_images, batch_steering
+        yield np.array(images), np.array(angles)
 
 
 ### Load Data

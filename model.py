@@ -4,7 +4,7 @@
 from architecture import model_architecture
 from data import SIZE_X, SIZE_Y
 
-image_shape = (SIZE_X, SIZE_Y, 3)
+image_shape = (SIZE_X, SIZE_Y, IMG_CH)
 model = model_architecture(image_shape)
 model.compile(loss = 'mse', optimizer = 'adam')
 
