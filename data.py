@@ -91,12 +91,13 @@ def preprocess_pipeline(data_line):
     image = flip(image)    
     return image, angle
 
+
 ### Data Generator
 
 def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
     
     data_length = len(data)
-    batch_images = np.zeros((batch_sizeE, SIZE_X, SIZE_Y, 3))
+    batch_images = np.zeros((batch_size, SIZE_X, SIZE_Y, 3))
     batch_steering = np.zeros(batch_size)
 
     while 1:
@@ -112,3 +113,18 @@ def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
             batch_steering[batch] = angle
 
         yield batch_images, batch_steering
+
+
+### Load Data
+
+from csv import DictReader
+
+def load_data():
+    samples = []
+    with open('data/driving_log.csv') as csvfile:
+        reader = DictReader(csvfile)
+        for line in reader:
+            samples.append(line)
+
+    from sklearn.model_selection import train_test_split
+    return train_test_split(samples, test_size=0.1)

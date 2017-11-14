@@ -1,29 +1,19 @@
 
-# Load data
-
-from csv import DictReader
-
-samples = []
-with open('data/driving_log.csv') as csvfile:
-    reader = DictReader(csvfile)
-    for line in reader:
-        samples.append(line)
-
-from sklearn.model_selection import train_test_split
-train_samples, validation_samples = train_test_split(samples, test_size=0.1)
-
 # Define model
 
 from architecture import model_architecture
 from data import SIZE_X, SIZE_Y
 
-image_shape = (SIZE_X, SIZE_Y)
+image_shape = (SIZE_X, SIZE_Y, 3)
 model = model_architecture(image_shape)
 model.compile(loss = 'mse', optimizer = 'adam')
 
 # Train model
 
 from data import data_generator
+from data import load_data
+
+train_samples, validation_samples = load_data()
 
 batch_size = 32
 nb_epoch = 5
@@ -43,6 +33,7 @@ for epoch in range(nb_epoch):
                         validation_data = validation_generator, 
                         nb_val_samples = nb_val_samples, 
                         nb_epoch = 1)
-    
+
+# Save model
 
 model.save('model.h5')

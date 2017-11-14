@@ -1,7 +1,7 @@
 # Define model architecture
 
 from keras.models import Sequential
-from keras.layers import Flatten, Dense
+from keras.layers import Flatten, Dense, Lambda, Convolution2D, ELU, Dropout
 
 # Nvidia's "End to End Learning for Self-Driving Cars" architecture
 
