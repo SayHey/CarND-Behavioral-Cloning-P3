@@ -3,6 +3,8 @@
 from keras.models import Sequential
 from keras.layers import Flatten, Dense
 
+# Nvidia's "End to End Learning for Self-Driving Cars" architecture
+
 def model_architecture(input_shape):
 
     model = Sequential()    
