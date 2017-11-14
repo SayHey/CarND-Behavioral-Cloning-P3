@@ -95,8 +95,7 @@ def preprocess_pipeline(data_line):
 
 
 ### Data Generator
-import os
-from matplotlib import pyplot
+
 def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
     
     data_length = len(data)
@@ -131,3 +130,19 @@ def load_data():
 
     from sklearn.model_selection import train_test_split
     return train_test_split(samples, test_size=0.1)
+
+def plain_data(data):
+    
+    data_length = len(data)
+    images = []
+    angles = []
+
+    for line in range(len(data)):
+        data_line = data[line]
+        image = cv2.imread(DATA_PATH + data_line['center'])
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        angle = float(data_line['steering'])
+        images.append(image)
+        angles.append(angle)
+
+    return np.array(images), np.array(angles)
