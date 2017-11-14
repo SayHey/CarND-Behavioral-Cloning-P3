@@ -88,20 +88,16 @@ def preprocess_pipeline(data_line):
     image = flip(image)    
     return image, angle
 
-### Data Generators
+### Data Generator
 
-# parameters
-BATCH_SIZE = 32
-
-# functions
-def generate_batch(data, bias):
+def generate_batch(data, bias = 1.0, batch_size = 32):
     
     data_length = len(data)
-    batch_images = np.zeros((BATCH_SIZE, SIZE_X, SIZE_Y, 3))
-    batch_steering = np.zeros(BATCH_SIZE)
+    batch_images = np.zeros((batch_sizeE, SIZE_X, SIZE_Y, 3))
+    batch_steering = np.zeros(batch_size)
 
     while 1:
-        for batch in range(BATCH_SIZE):
+        for batch in range(batch_size):
             line = np.random.randint(data_length)
             data_line = data[line]
             
