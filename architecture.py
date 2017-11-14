@@ -1,16 +1,19 @@
 # Define model architecture
 
 from keras.models import Sequential
-from keras.layers import Flatten, Dense, Lambda, Convolution2D, ELU, Dropout
+from keras.layers import Flatten, Dense, Lambda, Cropping2D, Convolution2D, ELU, Dropout
 
 # Nvidia's "End to End Learning for Self-Driving Cars" architecture
 
 def model_architecture(input_shape):
 
     model = Sequential()    
+
+    # СCropping layer
+    model.add(Cropping2D(cropping=((60,20), (0,0)), input_shape=input_shape))
     
     # Normalization layer
-    model.add(Lambda(lambda x: x / 127.5 - 1.0, input_shape=input_shape))
+    model.add(Lambda(lambda x: x / 127.5 - 1.0))
     
     # Convolutional layers
     model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode="valid", init='he_normal'))

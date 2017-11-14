@@ -5,11 +5,14 @@ import numpy as np
 ### Data Augmentation
 
 # parameters
+SIZE_X = 64                     # image new x dimension parameter
+SIZE_Y = 64                     # image new y dimension parameter
+IMG_CH = 3                      # image number of chanels
 BRIGHTNESS_RANGE = .5           # brightness range parameter used in brightness_augmentation
 TRANS_X_RANGE = 100             # transition range parameter used in shift_augmentation
-TRANS_Y_RANG = 40               # transition range parameter used in shift_augmentation
+TRANS_Y_RANGE = 40              # transition range parameter used in shift_augmentation
 TRANS_ANGLE = .4                # angle offset parameter used in shift_augmentation
-OFF_CENTER_ANGLE = .25          # parameter used in random_image_choice
+OFF_CENTER_ANGLE = .1           # parameter used in random_image_choice
 DATA_PATH = 'data/'             # data path used in random_image_choice
 RANDOM_IMAGE = { 0 : 'left',    # switch case dictionary for random_image_choice
                  1 : 'center',
@@ -28,11 +31,26 @@ def flip_augmentation(image, angle):
 def brightness_augmentation(image):    
     #
     # Randomly changes the brightness.
-    # 
-    temp = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) 
+    #
+    image = cv2.cvtColor(image,cv2.COLOR_RGB2HSV)
+    image = np.array(image, dtype = np.float64)
     brightness = BRIGHTNESS_RANGE + np.random.uniform()
-    temp[:, :, 2] = temp[:, :, 2] * brightness
-    return cv2.cvtColor(temp, cv2.COLOR_HSV2RGB)
+    image[:, :, 2] = image[:, :, 2] * brightness
+    image[:, :, 2][image[:, :, 2]>255]  = 255
+    image = np.array(image, dtype = np.uint8)
+    image = cv2.cvtColor(image, cv2.COLOR_HSV2RGB)
+    return image
+
+def trans_image(image,steer,trans_range):
+    # Translation
+    tr_x = trans_range*np.random.uniform()-trans_range/2
+    steer_ang = steer + tr_x/trans_range*2*.2
+    tr_y = 40*np.random.uniform()-40/2
+    #tr_y = 0
+    Trans_M = np.float32([[1,0,tr_x],[0,1,tr_y]])
+    image_tr = cv2.warpAffine(image,Trans_M,(cols,rows))
+    
+    return image_tr,steer_ang
 
 def shift_augmentation(image, angle):  
     #
@@ -42,7 +60,7 @@ def shift_augmentation(image, angle):
     y_translation = TRANS_Y_RANGE * (np.random.uniform() - .5)
     angle += x_translation * TRANS_ANGLE / TRANS_X_RANGE
     translation_matrix = np.float32([[1, 0, x_translation], [0, 1, y_translation]])
-    image = cv2.warpAffine(img, translation_matrix, (img.shape[1], img.shape[0]))
+    image = cv2.warpAffine(image, translation_matrix, (image.shape[1], image.shape[0]))
     return image, angle
 
 def random_image_choice(data_line): 
@@ -51,9 +69,10 @@ def random_image_choice(data_line):
     #
     img_choice = np.random.randint(3)
     img_path = DATA_PATH + data_line[RANDOM_IMAGE[img_choice]]
+
     image = cv2.imread(img_path)
-    image = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
-    angle = float(data_line['steering']) + OFF_CENTER_ANGLE * (img_choice - 1)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    angle = float(data_line['steering']) + OFF_CENTER_ANGLE * (1 - img_choice)
     return image, angle
 
 def filter_zero_angle_data(angle, bias): 
@@ -66,29 +85,12 @@ def filter_zero_angle_data(angle, bias):
     threshold = np.random.uniform()
     return (abs(angle) + bias) < threshold
 
-
-### Data Preprocessing
-
-# parameters
-SIZE_X = 64 # image new x dimension parameter used in crop_image
-SIZE_Y = 64 # image new y dimension parameter used in crop_image
-
-# functions
-def crop_image(image):
-
-    top_crop = 0.375*image.shape[0]
-    bottom_crop = 0.875*image.shape[0]
-    image = image[top_crop:bottom_crop, :, :]
-    image = cv2.resize(image, (SIZE_X, SIZE_Y), interpolation=cv2.INTER_AREA)
-    return image
-
 def preprocess_pipeline(data_line):
 
     image, angle = random_image_choice(data_line)
-    image = crop_image(image)
     image, angle = shift_augmentation(image, angle)
     image = brightness_augmentation(image)    
-    image = flip(image)    
+    image, angle = flip_augmentation(image, angle)    
     return image, angle
 
 
@@ -97,7 +99,7 @@ def preprocess_pipeline(data_line):
 def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
     
     data_length = len(data)
-    batch_images = np.zeros((batch_size, SIZE_X, SIZE_Y, 3))
+    batch_images = np.zeros((batch_size, SIZE_X, SIZE_Y, IMG_CH))
     batch_steering = np.zeros(batch_size)
 
     while 1:
@@ -108,6 +110,8 @@ def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
             image, angle = preprocess_pipeline(data_line)
             while filter_zero_angle_data(angle, non_zero_bias):
                image, angle = preprocess_pipeline(data_line)
+
+            image = np.array(image[0]) # for some reason python thinks that image = image,angle
 
             batch_images[batch] = image
             batch_steering[batch] = angle
@@ -122,7 +126,7 @@ from csv import DictReader
 def load_data():
     samples = []
     with open('data/driving_log.csv') as csvfile:
-        reader = DictReader(csvfile)
+        reader = DictReader(csvfile, skipinitialspace = True)
         for line in reader:
             samples.append(line)
 
