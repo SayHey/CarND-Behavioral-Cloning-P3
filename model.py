@@ -2,9 +2,9 @@
 # Define model
 
 from architecture import model_architecture
-from data import SIZE_X, SIZE_Y
+from data import SIZE_X, SIZE_Y, IMG_CH
 
-image_shape = (SIZE_X, SIZE_Y, IMG_CH)
+image_shape = (SIZE_Y, SIZE_X, IMG_CH)
 model = model_architecture(image_shape)
 model.compile(loss = 'mse', optimizer = 'adam')
 
@@ -15,10 +15,14 @@ from data import load_data
 
 train_samples, validation_samples = load_data()
 
-batch_size = 32
+batch_size = 10
 nb_epoch = 5
-samples_per_epoch = len(train_samples)
+samples_per_epoch = 100 # len(train_samples)
 nb_val_samples = len(validation_samples)
+
+print()
+print("Training network..")
+print()
 
 for epoch in range(nb_epoch):
 
@@ -37,3 +41,7 @@ for epoch in range(nb_epoch):
 # Save model
 
 model.save('model.h5')
+
+print()
+print("Network trained!")
+print()

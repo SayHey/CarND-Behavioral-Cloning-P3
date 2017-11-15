@@ -2,6 +2,20 @@
 import cv2
 import numpy as np
 
+### Load Data
+
+from csv import DictReader
+
+def load_data():
+    samples = []
+    with open('data/driving_log.csv') as csvfile:
+        reader = DictReader(csvfile, skipinitialspace = True)
+        for line in reader:
+            samples.append(line)
+
+    from sklearn.model_selection import train_test_split
+    return train_test_split(samples, test_size=0.1)
+
 ### Data Augmentation
 
 # parameters
@@ -97,9 +111,10 @@ def preprocess_pipeline(data_line):
 ### Data Generator
 
 def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
-    
+    #
+    # Generates augmented data
+    #
     data_length = len(data)
-
     while 1:
         images = []
         angles = []
@@ -116,33 +131,43 @@ def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
 
         yield np.array(images), np.array(angles)
 
-
-### Load Data
-
-from csv import DictReader
-
-def load_data():
-    samples = []
-    with open('data/driving_log.csv') as csvfile:
-        reader = DictReader(csvfile, skipinitialspace = True)
-        for line in reader:
-            samples.append(line)
-
-    from sklearn.model_selection import train_test_split
-    return train_test_split(samples, test_size=0.1)
-
 def plain_data(data):
-    
-    data_length = len(data)
+    #
+    # Returns the entire data set of 'center' images
+    #
     images = []
     angles = []
-
-    for line in range(len(data)):
-        data_line = data[line]
-        image = cv2.imread(DATA_PATH + data_line['center'])
+    for data_line in data:
+        image = cv2.imread(DATA_PATH + data_line[img_choice])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         angle = float(data_line['steering'])
         images.append(image)
         angles.append(angle)
+
+    return np.array(images), np.array(angles)
+
+def load_random(data):
+    line = np.random.randint(len(data))
+    data_line = data[line]            
+    return random_image_choice(data_line)
+
+def simple_data(data):
+    #
+    # Returns simple test data set of 3 'center', 'right' and ' left' images
+    #
+    images = []
+    angles = []
+
+    image, angle = load_random(data)
+    images.append(image)
+    angles.append(angle)
+
+    image, angle = load_random(data)
+    images.append(image)
+    angles.append(angle)
+
+    image, angle = load_random(data)
+    images.append(image)
+    angles.append(angle)
 
     return np.array(images), np.array(angles)
