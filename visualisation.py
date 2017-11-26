@@ -51,8 +51,6 @@ def raw_data_distribution():
         plt.hist(batch_steering, bins = 100)
         plt.show()
 
-#train_samples, validation_samples = load_data()
-#raw_data_distribution()
-#augmented_data_distribution()
-
-
+train_samples, validation_samples = load_data()
+raw_data_distribution()
+augmented_data_distribution()
