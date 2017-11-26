@@ -17,6 +17,7 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 
 [image1]: ./visualisations/network.png "Model Visualization"
+[image2]: ./visualisations/raw_data.png "Raw Data"
 
 ## Rubric Points
 ### Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -59,17 +60,34 @@ Eventually I ran tens of laps and collected about 30000 samples. I used data onl
 * recovery zig-zag drive
 * "race-like" drive smoothing corners
 
-#### 2. Processing training data
+#### 2. Analyzing training data
+
+Let's analyze the distribution of steering angles in raw data:
+
+![alt text][image2]
+
+
+
+#### 3. Processing training data
+
+
 
 I used Keras generators for data preparation as it helped to optimize training process.
 My initial plan for data processing pipeline was the folowing:
 
 * randomly choose sample from the data set
-* randomly choose center, left, or righ image from the sample
-* image, angle = read_line(data_line, IMAGE_MAP['center'])
-    image, angle = shift_augmentation(image, angle)
-    image = brightness_augmentation(image)    
-    image, angle = flip_augmentation(image, angle)    
+* randomly choose center, left, or right image from the sample and adjust corresponding steering angle by substracting constant valuee for right image or adding for the left image
+* perform shift augmentation by shifting the image along horizontal axis and adjust steering angle according to the shift
+* perform brightness augmentation
+* randomly flip the image along horizontal axis and multiply steering angle by -1
+
+But I faced some difficulties when using left and right images. For some reason my model didn't train well, the loss fluctuated and the final model performed bad. I waste a lot of time trying to figure out why, but didn't succseed. So I ended up abandoning using randomized image choosing, colected more data and used only center images.
+
+As a final step of data preparation I implemented a system that randomly filters all the samples that have a small steering angle according to some threshold. This threashold is parametrised with some bias value that changes during training.
+```sh
+non_zero_bias = 1 / (1 + .2 * epoch)
+```
+The bias parameter equals 1 during first epoch, thus all samples with every steering angle pass the filter. From epoch to epoch it gradualy decreases filtering more and more samples with small steering angles.
 
 
 #### 3. Model architecture
