@@ -2,22 +2,6 @@
 import cv2
 import numpy as np
 
-### Load Data
-
-from csv import DictReader
-
-def load_data():
-    samples = []
-    with open('data/driving_log.csv') as csvfile:
-        reader = DictReader(csvfile, skipinitialspace = True)
-        for line in reader:
-            samples.append(line)
-
-    from sklearn.model_selection import train_test_split
-    return train_test_split(samples, test_size=0.1)
-
-### Data Augmentation
-
 # parameters
 SIZE_X = 320                     # image x dimension parameter
 SIZE_Y = 160                    # image y dimension parameter
@@ -26,11 +10,44 @@ BRIGHTNESS_RANGE = .5           # brightness range parameter used in brightness_
 TRANS_X_RANGE = 100             # transition range parameter used in shift_augmentation
 TRANS_Y_RANGE = 40              # transition range parameter used in shift_augmentation
 TRANS_ANGLE = .4                # angle offset parameter used in shift_augmentation
-OFF_CENTER_ANGLE = .1           # parameter used in random_image_choice
-DATA_PATH = 'data/'             # data path used in random_image_choice
-RANDOM_IMAGE = { 0 : 'left',    # switch case dictionary for random_image_choice
-                 1 : 'center',
-                 2 : 'right'} 
+OFF_CENTER_ANGLE = .25           # parameter used in random_image_choice
+DATA_PATHS = {'data1/',           # data path used in random_image_choice
+              'data2/',
+              'data3/',
+              'data4/',
+              'data5/',
+              'data6/'}
+IMAGE_MAP = { 'center' : 0,     # switch case dictionary for random_image_choice
+              'left' : 1,
+              'right' : 2} 
+
+
+### Load Data
+
+import csv
+from sklearn.model_selection import train_test_split
+
+def load_data():
+    samples = []
+    for data in DATA_PATHS:
+        with open(data + 'driving_log.csv') as csvfile:
+            reader = csv.reader(csvfile, skipinitialspace = True)
+            for line in reader:
+                samples.append(line)
+    return train_test_split(samples, test_size=0.1)
+
+def read_line(data_line, img_choice):
+
+    img_path = data_line[img_choice]
+    image = cv2.imread(img_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    img_choice = (img_choice + 1) % 3
+    angle = float(data_line[3]) + OFF_CENTER_ANGLE * (img_choice - 1)
+    return image, angle
+    
+
+### Data Augmentation
+
 
 # functions
 def flip_augmentation(image, angle):
@@ -55,17 +72,6 @@ def brightness_augmentation(image):
     image = cv2.cvtColor(image, cv2.COLOR_HSV2RGB)
     return image
 
-def trans_image(image,steer,trans_range):
-    # Translation
-    tr_x = trans_range*np.random.uniform()-trans_range/2
-    steer_ang = steer + tr_x/trans_range*2*.2
-    tr_y = 40*np.random.uniform()-40/2
-    #tr_y = 0
-    Trans_M = np.float32([[1,0,tr_x],[0,1,tr_y]])
-    image_tr = cv2.warpAffine(image,Trans_M,(cols,rows))
-    
-    return image_tr,steer_ang
-
 def shift_augmentation(image, angle):  
     #
     # Randomly shifts the image along x and y axis.
@@ -82,12 +88,7 @@ def random_image_choice(data_line):
     # Randomly chooses the image from the set of center, right or left images available in data.
     #
     img_choice = np.random.randint(3)
-    img_path = DATA_PATH + data_line[RANDOM_IMAGE[img_choice]]
-
-    image = cv2.imread(img_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    angle = float(data_line['steering']) + OFF_CENTER_ANGLE * (1 - img_choice)
-    return image, angle
+    return read_line(data_line, img_choice)
 
 def filter_zero_angle_data(angle, bias): 
     #
@@ -96,36 +97,52 @@ def filter_zero_angle_data(angle, bias):
     # Bias value decreases from 1.0 to 0.0 increasing 
     # the probability to drop all the lower angles
     #
-    threshold = np.random.uniform()
-    return (abs(angle) + bias) < threshold
+    threshold = (np.random.uniform() - bias) * 0.1
+    return abs(angle) < threshold 
 
 def preprocess_pipeline(data_line):
 
-    image, angle = random_image_choice(data_line)
+    #image, angle = random_image_choice(data_line)
+    image, angle = read_line(data_line, IMAGE_MAP['center'])
     image, angle = shift_augmentation(image, angle)
     image = brightness_augmentation(image)    
     image, angle = flip_augmentation(image, angle)    
     return image, angle
 
 
-### Data Generator
+### Data Generators
 
-def data_generator(data, non_zero_bias = 1.0, batch_size = 32):
+def train_generator(data, batch_size = 32, non_zero_bias = 1.0):
     #
-    # Generates augmented data
-    #
+    # Generates augmented training data
+    #      
     data_length = len(data)
-    while 1:
-        images = []
+    while 1:    
+        images = [] 
         angles = []
         for batch in range(batch_size):
             line = np.random.randint(data_length)
-            data_line = data[line]
-            
+            data_line = data[line]            
             image, angle = preprocess_pipeline(data_line)
             while filter_zero_angle_data(angle, non_zero_bias):
                image, angle = preprocess_pipeline(data_line)
+            images.append(image)
+            angles.append(angle)        
+        yield np.array(images), np.array(angles)
+       
 
+from matplotlib import pyplot as plt
+def validation_generator(data, batch_size = 32):
+    #
+    # Generates validation data
+    #      
+    data_length = len(data)    
+    while 1:
+        images = [] 
+        angles = []
+        for batch in range(batch_size):
+            line = np.random.randint(data_length)
+            image, angle = read_line(data[line], IMAGE_MAP['center'])
             images.append(image)
             angles.append(angle)
 
@@ -138,36 +155,8 @@ def plain_data(data):
     images = []
     angles = []
     for data_line in data:
-        image = cv2.imread(DATA_PATH + data_line[img_choice])
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        angle = float(data_line['steering'])
+        image, angle = read_line(data_line, IMAGE_MAP['center'])
         images.append(image)
         angles.append(angle)
-
-    return np.array(images), np.array(angles)
-
-def load_random(data):
-    line = np.random.randint(len(data))
-    data_line = data[line]            
-    return random_image_choice(data_line)
-
-def simple_data(data):
-    #
-    # Returns simple test data set of 3 'center', 'right' and ' left' images
-    #
-    images = []
-    angles = []
-
-    image, angle = load_random(data)
-    images.append(image)
-    angles.append(angle)
-
-    image, angle = load_random(data)
-    images.append(image)
-    angles.append(angle)
-
-    image, angle = load_random(data)
-    images.append(image)
-    angles.append(angle)
 
     return np.array(images), np.array(angles)

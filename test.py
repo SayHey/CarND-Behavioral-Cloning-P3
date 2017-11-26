@@ -1,7 +1,7 @@
 # Testing environment
 import os
 import numpy as np
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
 
 # load_data test
 from data import load_data
@@ -12,7 +12,7 @@ from data import random_image_choice, shift_augmentation, brightness_augmentatio
 def pipeline_test():
     data_length = len(train_samples)
 
-    for i in range(0):
+    for i in range(10):
         line = np.random.randint(data_length)
         data_line = train_samples[line]
 
@@ -24,30 +24,59 @@ def pipeline_test():
         image, angle = preprocess_pipeline(data_line)
 
         print(angle)
-        pyplot.imshow(image, interpolation='nearest')
-        pyplot.show()    
+        plt.imshow(image, interpolation='nearest')
+        plt.show()    
         os.system('cls')
 
 
 # data_generator test
-from data import data_generator, plain_data
+from data import train_generator
 def data_generator_test():
-    batch_size = 0
-    batch_count = 0
-    data = data_generator(train_samples, non_zero_bias = 1, batch_size = batch_size)
+    batch_size = 1024
+    batch_count = 2
+    data = train_generator(train_samples, batch_size = batch_size)
 
     for i in range(batch_count):
         batch_images, batch_steering = (next(data))
         for (image, angle) in zip(batch_images, batch_steering):
             print(angle)
-            pyplot.imshow(image, interpolation='nearest')
-            pyplot.show()    
+            plt.imshow(image, interpolation='nearest')
+            plt.show()    
             os.system('cls')
 
 # plain_data test
 def plain_data_test():
     images, angles = plain_data(train_samples)
     print(angles[0])
-    pyplot.imshow(images[0], interpolation='nearest')
-    pyplot.show()    
+    plt.imshow(images[0], interpolation='nearest')
+    plt.show()    
     os.system('cls')
+
+
+from keras.models import load_model
+from data import validation_generator
+
+def model_test():
+
+    size = 256
+
+    model = load_model('model.h5')
+    train_samples, validation_samples = load_data()
+    a = len(train_samples)
+    b = len(validation_samples)
+    data = validation_generator(train_samples, batch_size = size)
+    augmented_data = train_generator(train_samples, batch_size = size)
+
+    images, steering = (next(data))
+    aug_images, aug_steering = (next(augmented_data))
+    predicted_steering = model.predict_generator(data, val_samples = 1)
+
+    bins = np.linspace(-1.0, 1.0, 100)
+    plt.hist(steering, bins, alpha=0.5, label='steering')
+    plt.hist(aug_steering, bins, alpha=0.5, label='augmented steering')
+    plt.hist(predicted_steering, bins, alpha=0.5, label='predicted steering')
+    plt.legend(loc='upper right')
+    plt.show()
+
+
+model_test()
