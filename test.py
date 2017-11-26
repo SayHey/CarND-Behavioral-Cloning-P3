@@ -58,7 +58,7 @@ from data import validation_generator
 
 def model_test():
 
-    size = 256
+    size = 512
 
     model = load_model('model.h5')
     train_samples, validation_samples = load_data()
@@ -71,7 +71,11 @@ def model_test():
     aug_images, aug_steering = (next(augmented_data))
     predicted_steering = model.predict_generator(data, val_samples = 1)
 
-    bins = np.linspace(-1.0, 1.0, 100)
+    bins = np.linspace(-0.5, 0.5, 100)
+
+    plt.hist(predicted_steering, 100)
+    plt.show()
+
     plt.hist(steering, bins, alpha=0.5, label='steering')
     plt.hist(aug_steering, bins, alpha=0.5, label='augmented steering')
     plt.hist(predicted_steering, bins, alpha=0.5, label='predicted steering')

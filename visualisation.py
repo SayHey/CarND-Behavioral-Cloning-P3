@@ -34,7 +34,9 @@ from data import train_generator, validation_generator
 def augmented_data_distribution():
     batch_size = 1000#len(train_samples)
     batch_count = 1
-    data = train_generator(train_samples, batch_size = batch_size)
+    epoch = 40
+    non_zero_bias = 1/(1 + epoch / 5.)
+    data = train_generator(train_samples, batch_size, non_zero_bias)
 
     for i in range(batch_count):
         batch_images, batch_steering = (next(data))         
@@ -52,5 +54,5 @@ def raw_data_distribution():
         plt.show()
 
 train_samples, validation_samples = load_data()
-raw_data_distribution()
+#raw_data_distribution()
 augmented_data_distribution()
