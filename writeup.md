@@ -1,8 +1,6 @@
 # **Behavioral Cloning** 
 
-## Writeup Template
-
-### You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
+## Writeup
 
 ---
 
@@ -18,13 +16,8 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/placeholder.png "Model Visualization"
-[image2]: ./examples/placeholder.png "Grayscaling"
-[image3]: ./examples/placeholder_small.png "Recovery Image"
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
-[image6]: ./examples/placeholder_small.png "Normal Image"
-[image7]: ./examples/placeholder_small.png "Flipped Image"
+[image1]: ./visualisations/network.png "Model Visualization"
+[image2]: ./visualisations/raw_data.png "Raw Data"
 
 ## Rubric Points
 ### Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -38,7 +31,7 @@ My project includes the following files:
 * model.py containing the script to create and train the model
 * drive.py for driving the car in autonomous mode
 * model.h5 containing a trained convolution neural network 
-* writeup_report.md or writeup_report.pdf summarizing the results
+* writeup.md summarizing the results
 
 #### 2. Submission includes functional code
 Using the Udacity provided simulator and my drive.py file, the car can be driven autonomously around the track by executing 
@@ -48,15 +41,78 @@ python drive.py model.h5
 
 #### 3. Submission code is usable and readable
 
-The model.py file contains the code for training and saving the convolution neural network. The file shows the pipeline I used for training and validating the model, and it contains comments to explain how the code works.
+I organized the code in the following way:
+
+* The data.py file contains the defenitions of all the data related functions such as extracting data from csv, data augmentation functions, data augmentation pipeline and data generators for training and validating the model.
+* The architecture.py contins the Keras defenition of convolution neural network architecture used inside the model
+* The model.py file contains the code for training and saving the convolution neural network.
+
+All files contain comments to explain how the code works. There are also some python files that are not related to the submission such as test.py (used for testing) and visualisation.py (used for generating various graphs).
+
 
 ### Model Architecture and Training Strategy
 
-#### 1. An appropriate model architecture has been employed
+#### 1. Gathering training data
 
-My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24) 
+I didn't succseed in training the network on data from keyboard input, so I end up using gaming steering wheel. The data turn out to be much more smooth and informative. 
+Eventually I ran tens of laps and collected about 30000 samples. I used data only from the first track, but I drove in both directions. I also applied different styles of driving: 
+* drive perfectly in the center of the road as much as I can
+* recovery zig-zag drive
+* "race-like" drive smoothing corners
 
-The model includes RELU layers to introduce nonlinearity (code line 20), and the data is normalized in the model using a Keras lambda layer (code line 18). 
+#### 2. Analyzing training data
+
+Let's analyze the distribution of steering angles in raw data:
+
+![alt text][image2]
+
+
+
+#### 3. Processing training data
+
+
+
+I used Keras generators for data preparation as it helped to optimize training process.
+My initial plan for data processing pipeline was the folowing:
+
+* randomly choose sample from the data set
+* randomly choose center, left, or right image from the sample and adjust corresponding steering angle by substracting constant valuee for right image or adding for the left image
+* perform shift augmentation by shifting the image along horizontal axis and adjust steering angle according to the shift
+* perform brightness augmentation
+* randomly flip the image along horizontal axis and multiply steering angle by -1
+
+But I faced some difficulties when using left and right images. For some reason my model didn't train well, the loss fluctuated and the final model performed bad. I waste a lot of time trying to figure out why, but didn't succseed. So I ended up abandoning using randomized image choosing, colected more data and used only center images.
+
+As a final step of data preparation I implemented a system that randomly filters all the samples that have a small steering angle according to some threshold. This threashold is parametrised with some bias value that changes during training.
+```sh
+non_zero_bias = 1 / (1 + .2 * epoch)
+```
+The bias parameter equals 1 during first epoch, thus all samples with every steering angle pass the filter. From epoch to epoch it gradualy decreases filtering more and more samples with small steering angles.
+
+
+#### 3. Model architecture
+
+I used the convolution neural network architecture from Nvidia's [End to End Learning for Self-Driving Cars](https://arxiv.org/pdf/1604.07316v1.pdf) paper suggested in the project video guide. 
+
+Here is a visualization of the architecture (image from the mentioned paper):
+
+![alt text][image1]
+
+The following modifications have been added:
+* I used ELU activation layers
+* I added cropping layer in the model using a Keras Cropping2D layer (code line 13)
+* I added data normalization in the model using a Keras Lambda layer (code line 16)
+* I added Dropout layers after each fully connected layer (more about overfitting later)
+
+#### 4. Training process
+
+
+
+
+
+
+
+
 
 #### 2. Attempts to reduce overfitting in the model
 
