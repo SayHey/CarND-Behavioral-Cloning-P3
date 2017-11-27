@@ -17,7 +17,21 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 
 [image1]: ./visualisations/network.png "Model Visualization"
+
 [image2]: ./visualisations/raw_data.png "Raw Data"
+[image3]: ./visualisations/aug_data_1bias.png "Aug Data 1"
+[image4]: ./visualisations/aug_data_0bias.png "Aug Data 0"
+[image5]: ./visualisations/predicted.png "Predicted Data 0"
+[image6]: ./visualisations/combined.png "Combined Data"
+
+
+[image7]: ./visualisations/figure_1.png "Aug Image 1"
+[image8]: ./visualisations/figure_1-1.png "Aug Image 2"
+[image9]: ./visualisations/figure_1-2.png "Aug Image 3"
+[image10]: ./visualisations/figure_1-3.png "Aug Image 4"
+
+[image11]: ./visualisations/figure_1-3.png "Aug Image 4"
+
 
 ## Rubric Points
 ### Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -66,31 +80,52 @@ Let's analyze the distribution of steering angles in raw data:
 
 ![alt text][image2]
 
+As we can see there are two issues with this data:
 
+* There are a lot of small and zero steering angle measurments in the data, which is bad, because the model trained on such data tend to be biased towards predicting zeros. This would result in difficulties in driving around sharp corners.
+* Data is slightly asymmetrical, because even though there are samples from both clockwise and counterclockwise runs, there are more data from counterclockwise laps. This sis bad, because the model tend to be biased towards predicting slightly negative angles even on straight segments.
+
+Both these issues were adressed during data processing step.
 
 #### 3. Processing training data
-
-
 
 I used Keras generators for data preparation as it helped to optimize training process.
 My initial plan for data processing pipeline was the folowing:
 
 * randomly choose sample from the data set
 * randomly choose center, left, or right image from the sample and adjust corresponding steering angle by substracting constant valuee for right image or adding for the left image
-* perform shift augmentation by shifting the image along horizontal axis and adjust steering angle according to the shift
-* perform brightness augmentation
-* randomly flip the image along horizontal axis and multiply steering angle by -1
+* perform shift augmentation by randomly shifting the image along horizontal and vertical axis and adjust steering angle according to the shift
+* perform brightness augmentation by randomly changing brightness
+* randomly flip the image along horizontal axis and multiply steering angle by -1 to adress data asymmetry issue mentioned above
+* randomly filter zero data (more about that below)
 
 But I faced some difficulties when using left and right images. For some reason my model didn't train well, the loss fluctuated and the final model performed bad. I waste a lot of time trying to figure out why, but didn't succseed. So I ended up abandoning using randomized image choosing, colected more data and used only center images.
 
-As a final step of data preparation I implemented a system that randomly filters all the samples that have a small steering angle according to some threshold. This threashold is parametrised with some bias value that changes during training.
+Here are some examples of post augmentation images:
+
+![alt text][image7]
+![alt text][image8]
+![alt text][image9]
+![alt text][image10]
+
+To eliminate the issue of zero bias in data I implemented a system that randomly filters all the samples that have a small steering angle according to some threshold. This threashold is parametrised with some bias value that changes during training.
 ```sh
 non_zero_bias = 1 / (1 + .2 * epoch)
 ```
 The bias parameter equals 1 during first epoch, thus all samples with every steering angle pass the filter. From epoch to epoch it gradualy decreases filtering more and more samples with small steering angles.
 
+#### 2. Analyzing training data
 
-#### 3. Model architecture
+Here is the final data distribution:
+
+* For zero bias filter parameter equals 1 (first epoch of training) ![alt text][image3]
+* For zero bias filter parameter equals ~0.1 (last epoch of training) ![alt text][image4]
+
+Here is the distribution of predicted data for the first track:
+
+
+
+#### 4. Model architecture
 
 I used the convolution neural network architecture from Nvidia's [End to End Learning for Self-Driving Cars](https://arxiv.org/pdf/1604.07316v1.pdf) paper suggested in the project video guide. 
 
@@ -106,8 +141,8 @@ The following modifications have been added:
 
 #### 4. Training process
 
-
-
+The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25).
+In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set.
 
 
 
