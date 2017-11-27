@@ -30,7 +30,7 @@ The goals / steps of this project are the following:
 [image9]: ./visualisations/figure_1-2.png "Aug Image 3"
 [image10]: ./visualisations/figure_1-3.png "Aug Image 4"
 
-[image11]: ./visualisations/figure_1-3.png "Aug Image 4"
+[image11]: ./visualisations/loss.png "Loss"
 
 
 ## Rubric Points
@@ -63,7 +63,7 @@ I organized the code in the following way:
 
 All files contain comments to explain how the code works. There are also some python files that are not related to the submission such as test.py (used for testing) and visualisation.py (used for generating various graphs).
 
-
+---
 ### Model Architecture and Training Strategy
 
 #### 1. Gathering training data
@@ -113,18 +113,16 @@ non_zero_bias = 1 / (1 + .2 * epoch)
 ```
 The bias parameter equals 1 during first epoch, thus all samples with every steering angle pass the filter. From epoch to epoch it gradualy decreases filtering more and more samples with small steering angles.
 
-#### 2. Analyzing training data
+#### 4. Analyzing post augmented data
 
 Here is the final data distribution:
 
 * For zero bias filter parameter equals 1 (first epoch of training) ![alt text][image3]
 * For zero bias filter parameter equals ~0.1 (last epoch of training) ![alt text][image4]
 
-Here is the distribution of predicted data for the first track:
+As we can see we managed to achieve appropriate data distribution for training purposes.
 
-
-
-#### 4. Model architecture
+#### 5. Model architecture
 
 I used the convolution neural network architecture from Nvidia's [End to End Learning for Self-Driving Cars](https://arxiv.org/pdf/1604.07316v1.pdf) paper suggested in the project video guide. 
 
@@ -136,84 +134,27 @@ The following modifications have been added:
 * I used ELU activation layers
 * I added cropping layer in the model using a Keras Cropping2D layer (code line 13)
 * I added data normalization in the model using a Keras Lambda layer (code line 16)
-* I added Dropout layers after each fully connected layer (more about overfitting later)
+* Dropout layers
 
-#### 4. Training process
+Since we heavily augmented the data we can expect our model to generalize well already. But I also added Dropout layers after each fully connected layer to adrees possible overfitting.
 
-The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25).
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set.
+#### 6. Training process
 
+In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I used mean square error loss and also mean absolute error metrics for both training and validation set to monitor training performance.
 
-
-
-
-
-#### 2. Attempts to reduce overfitting in the model
-
-The model contains dropout layers in order to reduce overfitting (model.py lines 21). 
-
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
-
-#### 3. Model parameter tuning
+![alt text][image11]
 
 The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25).
 
-#### 4. Appropriate training data
 
-Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road ... 
+#### 7. Analizing model performance
 
-For details about how I created the training data, see the next section. 
+Here is the distribution of predicted data for the first track:
 
-### Model Architecture and Training Strategy
-
-#### 1. Solution Design Approach
-
-The overall strategy for deriving a model architecture was to ...
-
-My first step was to use a convolution neural network model similar to the ... I thought this model might be appropriate because ...
-
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
-
-To combat the overfitting, I modified the model so that ...
-
-Then I ... 
-
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
-
-At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
-
-#### 2. Final Model Architecture
-
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
-
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
-
-![alt text][image1]
-
-#### 3. Creation of the Training Set & Training Process
-
-To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
-
-![alt text][image2]
-
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
-
-![alt text][image3]
-![alt text][image4]
 ![alt text][image5]
 
-Then I repeated this process on track two in order to get more data points.
-
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
+And finally here are raw, augmented and predicted data distributions combines:
 
 ![alt text][image6]
-![alt text][image7]
-
-Etc ....
-
-After the collection process, I had X number of data points. I then preprocessed this data by ...
 
 
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
-
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
