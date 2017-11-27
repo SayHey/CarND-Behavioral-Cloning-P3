@@ -140,12 +140,9 @@ Since we heavily augmented the data we can expect our model to generalize well a
 
 #### 6. Training process
 
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I used mean square error loss and also mean absolute error metrics for both training and validation set to monitor training performance.
+In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I used mean square error loss and also mean absolute error metrics for both training and validation set to monitor training performance. The model was trained using Adam optimizer.
 
 ![alt text][image11]
-
-The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25).
-
 
 #### 7. Analizing model performance
 
@@ -157,4 +154,8 @@ And finally here are raw, augmented and predicted data distributions combines:
 
 ![alt text][image6]
 
+The model drives the first track well on the speeds up to 20 mph. The video of the run is in **run1.mp4** file. 
+This model also drives the second track decently. It only went bumped into the wall once and once the speed controller stoped it, so I had to manualy make it move again. Note that this was achieved without any data from the second track. The video of the second track run is in **run2.mp4** file.
+
+I also tried different models. I managed to ran first track on the max speed of 30mph with the model that had high zero bias filter parameter (thus having more smooth data). However this model required some changes in drive.py. I had to add multiplier to predicted angle, because model didn't manage to drive sharp corners without it. I thought we are not allowed to do this, so I didn't use this approach in a final model.
 
