@@ -28,6 +28,8 @@ def pipeline_test():
         plt.show()    
         os.system('cls')
 
+pipeline_test()
+
 
 # data_generator test
 from data import train_generator
@@ -43,6 +45,8 @@ def data_generator_test():
             plt.imshow(image, interpolation='nearest')
             plt.show()    
             os.system('cls')
+
+data_generator_test()
 
 # plain_data test
 def plain_data_test():

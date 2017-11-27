@@ -9,7 +9,7 @@ def model_architecture(input_shape):
 
     model = Sequential()    
 
-    # СCropping layer
+    # Сropping layer
     model.add(Cropping2D(cropping=((60,20), (0,0)), input_shape=input_shape))
     
     # Normalization layer
