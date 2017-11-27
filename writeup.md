@@ -103,10 +103,9 @@ But I faced some difficulties when using left and right images. For some reason 
 
 Here are some examples of post augmentation images:
 
-![alt text][image7]
 ![alt text][image8]
-![alt text][image9]
 ![alt text][image10]
+![alt text][image9]
 
 To eliminate the issue of zero bias in data I implemented a system that randomly filters all the samples that have a small steering angle according to some threshold. This threashold is parametrised with some bias value that changes during training.
 ```sh
